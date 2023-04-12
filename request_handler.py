@@ -1,6 +1,8 @@
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
+from views import get_all_employees, get_single_employee, get_all_products, get_single_product
+from views import get_all_orders, get_single_order
 
 
 
@@ -49,7 +51,41 @@ class HandleRequests(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Handle Get requests to the server"""
+        status_code = 200
+        response = {}
 
+        (resource, id) = self.parse_url(self.path)
+
+        if resource == "products":
+            if id is not None:
+                response = get_single_product(id)
+                if response is None:
+                    status_code = 404
+                    response = {"message": "That product is not currently in stock."}
+            else:
+                response = get_all_products()
+
+        if resource == "employees":
+            if id is not None:
+                response = get_single_employee(id)
+                if response is None:
+                    status_code = 404
+                    response = {"message": "That employee does not exist."}
+            else:
+                response = get_all_employees()
+
+        if resource == "orders":
+            if id is not None:
+                response = get_single_order(id)
+                if response is None:
+                    status_code = 404
+                    response = {"message": "That order does not exist."}
+            else:
+                response = get_all_orders()
+
+        self._set_headers(status_code)
+        self.wfile.write(json.dumps(response).encode())
+        
     def do_POST(self):
         """Make a post request to the server"""
 
