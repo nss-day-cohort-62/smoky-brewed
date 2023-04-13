@@ -36,3 +36,28 @@ def get_single_order(id):
             requested_order.pop("employee_id")
             requested_order["employee"] = matching_employee
     return requested_order
+
+
+def create_order(order):
+    """Creates a new order"""
+    max_id = ORDERS[-1]["id"]
+    new_id = max_id + 1
+    order["id"] = new_id
+    ORDERS.append(order)
+    return order
+
+def update_order(id, new_order):
+    """Edit Order."""
+    for index, order in enumerate(ORDERS):
+        if order["id"] == id:
+            ORDERS[index] = new_order
+            break
+
+def delete_order(id):
+    """To Delete Order"""
+    order_index = -1
+    for index, order in enumerate(ORDERS):
+        if order["id"] == id:
+            order_index = index
+    if order_index >= 0:
+        ORDERS.pop(order_index)
