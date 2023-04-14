@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "./request_handler.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Server",
+            "type": "python",
+            "request": "launch",
+            "program": "./server.py",
+            "console": "integratedTerminal"
         }
     ]
 }
