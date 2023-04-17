@@ -26,7 +26,7 @@ PRODUCTS = [
     },
     {
         "id": 6,
-        "name": "Cappucino",
+        "name": "Cappuccino",
         "price": 12.49
     }
 ]
