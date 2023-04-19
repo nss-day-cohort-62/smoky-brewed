@@ -1,3 +1,5 @@
+import sqlite3
+from models import Order
 from .product_requests import get_single_product
 from .employee_requests import get_single_employee
 
@@ -15,27 +17,53 @@ ORDERS = [
     },
 ]
 
-
 def get_all_orders():
-    """Get all orders."""
+    """Get all orders using SQL database."""
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+        o.id,
+        o.product_id,
+        o.employee_id,
+        o.timestamp
+    From "Order" o
+        """)
+
+    orders = []
+    dataset = db_cursor.fetchall()
+
+    for row in dataset:
+        order = Order(row['id'], row['product_id'], row['employee_id'], row['timestamp'],)
+
+        orders.append(order.__dict__)
+
     return ORDERS
 
 
 def get_single_order(id):
-    """Get single order."""
-    requested_order = None
-    for order in ORDERS:
-        if order["id"] == id:
-            requested_order = order.copy()
-            matching_product = get_single_product(
-                requested_order["product_id"])
-            requested_order.pop("product_id")
-            requested_order["product"] = matching_product
-            matching_employee = get_single_employee(
-                requested_order["employee_id"])
-            requested_order.pop("employee_id")
-            requested_order["employee"] = matching_employee
-    return requested_order
+    """Get single order from SQL."""
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+        o.id,
+        o.product_id,
+        o.employee_id,
+        o.timestamp
+    From "Order" o
+    WHERE o.id = ?
+        """, ( id, ))
+
+    data = db_cursor.fetchone()
+
+    order = Order(data['id'], data['product_id'], data['employee_id'], data['timestamp'],)
+
+    return order.__dict__
 
 
 def create_order(order):
