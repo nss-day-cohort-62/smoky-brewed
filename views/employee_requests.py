@@ -76,31 +76,55 @@ def get_single_employee(id):
         return employee.__dict__
 
 
-def create_employee(employee):
+def create_employee(new_employee):
     """Creates a new employee"""
-    max_id = EMPLOYEES[-1]["id"]
-    new_id = max_id + 1
-    employee["id"] = new_id
-    EMPLOYEES.append(employee)
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    return employee
+        db_cursor.execute("""
+        INSERT INTO Employee
+            ( name, email, hourly_rate )
+        VALUES
+            ( ?, ?, ? );
+        """, (new_employee['name'], new_employee['email'],
+            new_employee['hourly_rate'], ))
+
+        id = db_cursor.lastrowid
+        new_employee['id'] = id
+
+
+    return new_employee
 
 
 def update_employee(id, new_employee):
     """Updates employee info with client's replacement"""
-    for index, employee in enumerate(EMPLOYEES):
-        if employee["id"] == id:
-            EMPLOYEES[index] = new_employee
-            break
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Employee
+            SET
+                name = ?,
+                email = ?,
+                hourly_rate = ?
+        WHERE id = ?
+        """, (new_employee['name'], new_employee['email'],
+            new_employee['hourly_rate'], id, ))
+
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        return False
+    else:
+        return True
 
 
 def delete_employee(id):
     """Deletes employee"""
-    employee_index = None
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    for index, employee in enumerate(EMPLOYEES):
-        if employee["id"] == id:
-            employee_index = index
-
-    if employee_index is not None:
-        EMPLOYEES.pop(employee_index)
+        db_cursor.execute("""
+        DELETE FROM Employee
+        WHERE id = ?
+        """, (id, ))

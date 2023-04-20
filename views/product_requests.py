@@ -1,5 +1,4 @@
 import sqlite3
-import json
 from models import Product
 
 PRODUCTS = [
@@ -81,24 +80,47 @@ def get_single_product(id):
 
         return product.__dict__
 
-def create_product(product):
-    max_id = PRODUCTS[-1]["id"]
-    new_id = max_id + 1
-    product["id"] = new_id
-    PRODUCTS.append(product)
-    return product
+def create_product(new_product):
+    """Create a new product"""
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        INSERT INTO Product
+            ( name, price )
+        VALUES
+            ( ?, ? );
+        """, (new_product['name'], new_product['price'], ))
+
+        id = db_cursor.lastrowid
+        new_product['id'] = id
+    
+    return new_product
 
 def delete_product(id):
-    product_index = -1
-    for index, product in enumerate(PRODUCTS):
-        if product["id"] == id:
-            product_index = index
-    
-    if product_index >= 0:
-        PRODUCTS.pop(product_index)
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        DELETE FROM Product
+        WHERE id = ?
+        """, ( id, ))
 
 def update_product(id, new_product):
-    for index, product in enumerate(PRODUCTS):
-        if product["id"] == id:
-            PRODUCTS[index] = new_product
-            break
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Product
+            SET
+                name = ?,
+                price = ?
+        WHERE id = ?
+        """, (new_product['name'], new_product['price'], id, ))
+
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        return False
+    else:
+        return True
