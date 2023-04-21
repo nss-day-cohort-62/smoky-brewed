@@ -1,9 +1,9 @@
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
-from views import get_all_employees, get_single_employee, create_employee, update_employee, delete_employee
-from views import get_all_products, get_single_product, create_product, update_product, delete_product
-from views import get_all_orders, get_single_order, create_order, update_order, delete_order
+from views import get_all_employees, get_single_employee, create_employee, update_employee, delete_employee, get_employees_by_name
+from views import get_all_products, get_single_product, create_product, update_product, delete_product, get_product_by_price
+from views import get_all_orders, get_single_order, create_order, update_order, delete_order, get_order_by_product
 
 
 
@@ -54,35 +54,47 @@ class HandleRequests(BaseHTTPRequestHandler):
         """Handle Get requests to the server"""
         status_code = 200
         response = {}
+        parsed = self.parse_url(self.path)
+       
+        if '?' not in self.path:
+            ( resource, id ) = parsed
 
-        (resource, id) = self.parse_url(self.path)
+            if resource == "products":
+                if id is not None:
+                    response = get_single_product(id)
+                    if response is None:
+                        status_code = 404
+                        response = {"message": "That product is not currently in stock."}
+                else:
+                    response = get_all_products()
 
-        if resource == "products":
-            if id is not None:
-                response = get_single_product(id)
-                if response is None:
-                    status_code = 404
-                    response = {"message": "That product is not currently in stock."}
-            else:
-                response = get_all_products()
+            if resource == "employees":
+                if id is not None:
+                    response = get_single_employee(id)
+                    if response is None:
+                        status_code = 404
+                        response = {"message": "That employee does not exist."}
+                else:
+                    response = get_all_employees()
 
-        if resource == "employees":
-            if id is not None:
-                response = get_single_employee(id)
-                if response is None:
-                    status_code = 404
-                    response = {"message": "That employee does not exist."}
-            else:
-                response = get_all_employees()
+            if resource == "orders":
+                if id is not None:
+                    response = get_single_order(id)
+                    if response is None:
+                        status_code = 404
+                        response = {"message": "That order does not exist."}
+                else:
+                    response = get_all_orders()
 
-        if resource == "orders":
-            if id is not None:
-                response = get_single_order(id)
-                if response is None:
-                    status_code = 404
-                    response = {"message": "That order does not exist."}
-            else:
-                response = get_all_orders()
+        else:
+            (resource, query) = parsed
+
+            if query.get('price') and resource == 'products':
+                response = get_product_by_price(query['price'][0])
+            if query.get('product_id') and resource == 'orders':
+                response = get_order_by_product(query['product_id'][0])
+            if query.get('name') and resource == 'employees':
+                response = get_employees_by_name(query['name'][0])
 
         self._set_headers(status_code)
         self.wfile.write(json.dumps(response).encode())

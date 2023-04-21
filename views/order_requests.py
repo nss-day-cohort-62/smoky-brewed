@@ -44,6 +44,31 @@ def get_all_orders():
 
     return ORDERS
 
+# bring back all orders for a certain product
+def get_order_by_product(product_id):
+    """To query orders by a certain product"""
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+            o.id,
+            o.product_id,
+            o.employee_id,
+            o.timestamp
+        FROM "Order" o
+        WHERE o.product_id = ?
+        """, ( product_id, ))
+
+        orders = []
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            order = Order(row['id'], row['product_id'], row['employee_id'], row['timestamp'],)
+            orders.append(order.__dict__)
+
+    return orders
 
 def get_single_order(id):
     """Get single order from SQL."""

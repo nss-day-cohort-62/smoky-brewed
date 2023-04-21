@@ -80,6 +80,31 @@ def get_single_product(id):
 
         return product.__dict__
 
+def get_product_by_price(price):
+    """Code for getting order by price filtering"""
+    with sqlite3.connect("./brewed.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+            p.id,
+            p.name,
+            p.price
+        FROM Product p
+        WHERE p.price < ?
+        """, ( price, ))
+
+        products = []
+
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            product = Product(row['id'], row['name'], row['price'])
+            products.append(product.__dict__)
+
+    return products
+
 def create_product(new_product):
     """Create a new product"""
     with sqlite3.connect("./brewed.sqlite3") as conn:
